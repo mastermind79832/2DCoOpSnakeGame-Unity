@@ -53,4 +53,23 @@ public class SnakeController : MonoBehaviour
         }
         m_MoveTimer += Time.deltaTime;
     }
+
+    void OnTriggerEnter2D(Collider2D other) {
+        if(other.CompareTag("Fruit"))
+        {
+            FruitSpwanner.fruitInstance.SpawnNextFruit();
+        }
+
+        if(other.CompareTag("Boundary"))
+        {
+            Vector2 pos = transform.position;
+            if(other.name == "LeftWall" || other.name == "RightWall")
+                pos.x *= -1;
+            else if(other.name == "DownWall" || other.name == "TopWall")
+                pos.y *= -1;
+            transform.position = pos;
+        }
+    }
+
+    
 }
