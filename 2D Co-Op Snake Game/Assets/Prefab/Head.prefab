@@ -144,7 +144,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36ca71f013a8e8f45808707978bd361b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
+  speed: 20
+  bounds: {x: 42, y: 22}
   upKey: 119
   downKey: 115
   leftKey: 97

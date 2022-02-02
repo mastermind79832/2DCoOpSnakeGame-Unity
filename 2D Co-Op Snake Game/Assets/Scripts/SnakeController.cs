@@ -8,6 +8,7 @@ public class SnakeController : MonoBehaviour
 {
     
     [Range(0,50)] public float speed;
+    public Vector2 bounds;
 
     public KeyCode upKey = KeyCode.W;
     public KeyCode downKey = KeyCode.A;
@@ -26,8 +27,9 @@ public class SnakeController : MonoBehaviour
     void Update() 
     {     
         GetSnakeDirection();
-        MoveSnake();
+        MoveSnake();  
     }
+
     void FixedUpdate()
     {
     }
@@ -48,28 +50,28 @@ public class SnakeController : MonoBehaviour
     {
         if(m_MoveTimer > 1/speed)
         {
-            transform.position += m_Direction;  
+            Vector3 pos = transform.position;
+            pos += m_Direction;  
+            CheckBoundary(ref pos);
+            transform.position = pos;  
             m_MoveTimer = 0;
         }
         m_MoveTimer += Time.deltaTime;
     }
+    private void CheckBoundary(ref Vector3 pos)
+    {  
+        if(Mathf.Abs(pos.x) >= bounds.x)
+            pos.x *= -1;
+        else if(Mathf.Abs(pos.y) >= bounds.y)
+            pos.y *= -1;
+        transform.position = pos;
+    }
 
-    void OnTriggerEnter2D(Collider2D other) {
+    void OnTriggerEnter2D(Collider2D other) 
+    {
         if(other.CompareTag("Fruit"))
         {
             FruitSpwanner.fruitInstance.SpawnNextFruit();
         }
-
-        if(other.CompareTag("Boundary"))
-        {
-            Vector2 pos = transform.position;
-            if(other.name == "LeftWall" || other.name == "RightWall")
-                pos.x *= -1;
-            else if(other.name == "DownWall" || other.name == "TopWall")
-                pos.y *= -1;
-            transform.position = pos;
-        }
     }
-
-    
 }
