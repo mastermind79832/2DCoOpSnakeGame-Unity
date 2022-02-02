@@ -8,6 +8,7 @@ public class FruitSpwanner : MonoBehaviour
     public static FruitSpwanner fruitInstance {get {return m_FruitInstance;}}
 
     public Transform fruit;
+    public int fruitValue;
     public BoxCollider2D spawnArea;
     public float spawnInterval;
     private float m_SpawnTimer;
@@ -29,6 +30,12 @@ public class FruitSpwanner : MonoBehaviour
             SpawnNextFruit();
         }
         m_SpawnTimer += Time.deltaTime;
+    }
+
+    public int SnakeAteFruit()
+    {
+        SpawnNextFruit();
+        return fruitValue;
     }
 
     public void SpawnNextFruit()
