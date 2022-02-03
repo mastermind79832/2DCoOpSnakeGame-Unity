@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 9175771969266858296}
   - component: {fileID: 7111884735154346135}
   m_Layer: 0
-  m_Name: Spawnner
+  m_Name: FoodSpawner
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -70,6 +70,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0b29816625397b40ad42e7487269556, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fruit: {fileID: 0}
-  spawnArea: {fileID: 9175771969266858296}
-  spawnInterval: 3
+  fruit: {fileID: 8194922002100402342, guid: 5b6a0b8d18ddf6f46978c601b1195854, type: 3}
+  fruitValue: 2
+  FruitSpawnInterval: 5
+  poison: {fileID: 5794676755688138497, guid: 26a56e87053eb05458683f5a63e44ee8, type: 3}
+  poisonValue: 1
+  poisonSpawnInterval: 2
+  poisonStayTime: 5
