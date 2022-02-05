@@ -8,7 +8,10 @@ public class GameManager : MonoBehaviour
     private static GameManager s_ManagerInstance;
     public static GameManager managerInstance {get { return s_ManagerInstance; }}
 
+    public bool isDuel;
+
     private BoxCollider2D m_collider;
+ 
 
     // private Bounds s_bounds;
 
@@ -41,6 +44,10 @@ public class GameManager : MonoBehaviour
         Bounds.minY = pos.y - (size.y/2) + offset.y;
     }
 
+    public void UpdateScore(float value)
+    {
+
+    }
     // public Bounds GetBounds()
     // {
     //     return s_bounds;

@@ -8,6 +8,8 @@ using System;
 public class SnakeController : MonoBehaviour
 { 
     [Range(0,50)] public float speed;
+    public Players player;
+    public GameObject UI;
 
     [Header("Body Config")]
     public GameObject bodyPart;
@@ -23,18 +25,35 @@ public class SnakeController : MonoBehaviour
     private Rigidbody2D m_rigidBody;
     private List<Transform> m_body;
     private float m_MoveTimer = 0;
-    private bool m_IsVertical, m_IsDead, m_Immunity;
+    private bool m_IsVertical, m_Paused, m_immunity;
+    private bool[] m_PowerUp = new bool[3];
+    private float[] m_PowerUpTimer = new float[3];
+    private float m_score;
 
     private void Start()
     {
         m_rigidBody = GetComponent<Rigidbody2D>();
         m_rigidBody.bodyType = RigidbodyType2D.Kinematic;
-        m_IsDead = false;
+        m_Paused = false;
         InitializeBody();
+        initializePowerUp();
+    }
+
+    private void initializePowerUp()
+    {
+        for(int i = 0; i < 3; i++) 
+        {
+            m_PowerUp[i] = false;
+            m_PowerUpTimer[i] = 0;
+        }
     }
 
     private void InitializeBody()
     {
+        if(player == Players.Beta)
+        {
+            GetComponent<SpriteRenderer>().color = Color.red;
+        }
         transform.position = transform.parent.position;
         m_Direction = Vector3.right;
         m_body = new List<Transform>();
@@ -45,19 +64,41 @@ public class SnakeController : MonoBehaviour
             AddNewBodyPart();
         }
     }
+    
     private IEnumerator SetImmunity(float timer)
     {
-        m_Immunity = true;
+        m_immunity = true;
         yield return new WaitForSeconds(timer);
-        m_Immunity = false;
+        m_immunity = false;
     }
 
     private void Update() 
     { 
-        if(m_IsDead)
+        if(m_Paused)
             return;    
         GetSnakeDirection();
         MoveSnake();  
+        UpdatePowerUpTimer();
+    }
+
+    private void UpdatePowerUpTimer()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if(m_PowerUp[i])
+                m_PowerUpTimer[i] += Time.deltaTime;
+            else    
+                continue;
+            
+            float timePeriod = PowerUpManager.powerUpInstance.getPowerUpPeriod((PowerUps)i);
+
+            if(m_PowerUpTimer[i] > timePeriod)
+            {
+                m_PowerUp[i] = false;
+                UIManager.uiInstance.PowerUp(player,(PowerUps)i,false);
+                m_PowerUpTimer[i] = 0;
+            }
+        }
     }
 
     private void GetSnakeDirection()
@@ -65,28 +106,25 @@ public class SnakeController : MonoBehaviour
         if(Input.GetKeyDown(upKey) && !m_IsVertical)
         {
             m_Direction = Vector3.up;
-            m_IsVertical = true;
         }
         else if(Input.GetKeyDown(leftKey) && m_IsVertical)
         {   
              m_Direction = Vector3.left;
-            m_IsVertical = false;
         }
         else  if(Input.GetKeyDown(rightkey) && m_IsVertical)
         {   
             m_Direction = Vector3.right;
-            m_IsVertical = false;
         }
         else if(Input.GetKeyDown(downKey) && !m_IsVertical)
         {   
             m_Direction = Vector3.down;  
-            m_IsVertical = true; 
         }
     }
 
     private void MoveSnake()
     {
-        if (m_MoveTimer > 1 / speed)
+        float effectiveSpeed = speed * ((m_PowerUp[(int)PowerUps.speedUp])?3:1);
+        if (m_MoveTimer > 1 / effectiveSpeed)
         {
             MoveBody();
             MoveHead();
@@ -110,6 +148,11 @@ public class SnakeController : MonoBehaviour
         CheckBoundary(ref pos);
         transform.position = pos;
         m_MoveTimer = 0;
+
+        if(m_Direction.x == 0)
+            m_IsVertical = true;
+        else
+            m_IsVertical = false;
     }
 
     private void CheckBoundary(ref Vector3 pos)
@@ -130,6 +173,8 @@ public class SnakeController : MonoBehaviour
         newPart.name = string.Format("body {0}",bodyCount);
         m_body.Add(newPart.transform);
         newPart.transform.parent = transform.parent;
+        if(player == Players.Beta)
+            newPart.GetComponent<SpriteRenderer>().color = Color.red;
         SetScale();
     }
 
@@ -151,12 +196,13 @@ public class SnakeController : MonoBehaviour
 
     private void PlayAgain()
     {
+        FruitSpwanner.fruitInstance.ResetAllFood();
         StartCoroutine(DeathAnimation());
     }
 
     IEnumerator DeathAnimation()
     {
-        m_IsDead = true;
+        m_Paused = true;
         float waitTime = 0.1f;
         for (int i = m_body.Count-1; i > 0; i--)
         {
@@ -166,46 +212,104 @@ public class SnakeController : MonoBehaviour
         yield return new WaitForSeconds(waitTime);
         m_body.Clear();
         InitializeBody();
-        m_IsDead = false;
+        m_Paused = false;
     }
+    
     private void DestoryLastBody()
     {
         Destroy(m_body[m_body.Count- 1].gameObject);
         m_body.RemoveAt(m_body.Count- 1);
         SetScale();
     }
+    
+    private void UpdateScore(float fruitScore)
+    { 
+        m_score += fruitScore * ((m_PowerUp[(int)PowerUps.scoreUp])?2:1);
+        UIManager.uiInstance.SetScoreUI(player,m_score);
+    }
+
+    private void AteFruit()
+    {
+        int count = FruitSpwanner.fruitInstance.SnakeAteFruit();
+        for (int i = 0; i < count; i++)
+        {
+            AddNewBodyPart();
+        }
+        if (m_body.Count > 3)
+            FruitSpwanner.fruitInstance.PoisonActivation(true);
+        
+        UpdateScore(FruitSpwanner.fruitInstance.fruitScore);
+    }
+
+    private void AtePoison()
+    {
+        int count = FruitSpwanner.fruitInstance.SnakeAtePoison();
+        for (int i = 0; i < count; i++)
+        {
+            DestoryLastBody();
+        }
+        if (m_body.Count < 3)
+            FruitSpwanner.fruitInstance.PoisonActivation(false);
+
+        UpdateScore(-FruitSpwanner.fruitInstance.poisonScore);
+    }
+
+     private void AteBody()
+    {
+        if(m_immunity)
+            return;
+        
+        if (m_PowerUp[(int)PowerUps.shield])
+        {
+            m_PowerUp[(int)PowerUps.shield] = false;
+            UIManager.uiInstance.PowerUp(player, PowerUps.shield, false);
+            StartCoroutine(SetImmunity(1));
+            return;
+        }
+        Debug.Log("Player Dead");
+        PlayAgain();
+        FruitSpwanner.fruitInstance.PoisonActivation(false);
+    }
+    
+    public void ActivatePowerUp(PowerUps power,GameObject powerObject)
+    {
+        Destroy(powerObject);
+        UIManager.uiInstance.PowerUp(player,power, true);
+        m_PowerUp[(int)power] = true;
+    }
 
     void OnTriggerEnter2D(Collider2D other) 
     {
         if(other.CompareTag("Fruit"))
         {
-            int count = FruitSpwanner.fruitInstance.SnakeAteFruit();
-            for (int i = 0; i < count; i++)
-            {
-                AddNewBodyPart();
-            }
-            if(m_body.Count > 3)
-                FruitSpwanner.fruitInstance.PoisonActivation(true);
+            AteFruit();
+            return;
         }
-
-        if(other.CompareTag("Poison"))
+        
+        if (other.CompareTag("Poison"))
         {
             Destroy(other.gameObject);
-            int count = FruitSpwanner.fruitInstance.SnakeAtePoison();
-            for (int i = 0; i < count; i++)
-            {
-                DestoryLastBody();
-            }
-            if(m_body.Count < 3)
-                FruitSpwanner.fruitInstance.PoisonActivation(false);
+            AtePoison();
+            return;
         }
 
-        if(other.CompareTag("Body") && !m_Immunity)
+        if (other.CompareTag("Body"))
         {
-            Debug.Log("Player Dead");
-            PlayAgain();
-            FruitSpwanner.fruitInstance.PoisonActivation(false);
+            AteBody();
+            return;
         }
-    }
 
+        if (other.CompareTag("Shield"))
+        {
+            ActivatePowerUp(PowerUps.shield,other.gameObject);
+        }
+        else if(other.CompareTag("ScoreUp"))
+        {
+            ActivatePowerUp(PowerUps.scoreUp,other.gameObject);
+        }
+        else if(other.CompareTag("SpeedUp"))
+        {
+            ActivatePowerUp(PowerUps.speedUp,other.gameObject);
+        }
+    } 
 }

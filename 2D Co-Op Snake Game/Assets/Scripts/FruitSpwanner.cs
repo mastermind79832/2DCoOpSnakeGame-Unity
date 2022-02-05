@@ -10,13 +10,15 @@ public class FruitSpwanner : MonoBehaviour
     [Header("Fruit")]
     public Transform fruit;
     public int fruitValue;
-    public float FruitSpawnInterval;
+    public float fruitSpawnInterval;
+    public float fruitScore;
 
     [Header("Poison")]
     public Transform poisonPrefab;
     public int poisonValue;
     public float poisonSpawnInterval;
     public float poisonStayTime;
+    public float poisonScore;
 
     [Header("Spawn Properties")]
     private float[] m_SpawnTimer = new float[2];
@@ -24,11 +26,17 @@ public class FruitSpwanner : MonoBehaviour
 
     void Awake()
     {
-        s_FruitInstance = this;
+        s_FruitInstance = this; 
+        intitializeFruit();
+    }
+
+    private void intitializeFruit()
+    {
         fruit = Instantiate(fruit.gameObject).transform;
+        fruit.GetComponent<BoxCollider2D>().enabled = true;
         fruit.parent = transform;
     }
-    
+
     void Update()
     {
         Spawn();
@@ -36,7 +44,7 @@ public class FruitSpwanner : MonoBehaviour
 
     private void Spawn()
     {
-        if (m_SpawnTimer[0] > FruitSpawnInterval)
+        if (m_SpawnTimer[0] > fruitSpawnInterval)
         {
             SpawnNextFruit();
         }
@@ -62,7 +70,7 @@ public class FruitSpwanner : MonoBehaviour
     {
         Vector3 newPos = GetRandomPos();
         GameObject poisonInstance = Instantiate(poisonPrefab,newPos,Quaternion.identity).gameObject;
-        poisonInstance.transform.parent = transform.parent;
+        poisonInstance.transform.parent = transform;
         Destroy(poisonInstance,poisonStayTime);
         m_SpawnTimer[1] = 0;
     }
@@ -86,9 +94,20 @@ public class FruitSpwanner : MonoBehaviour
         m_PosionEnable = value;
     }
 
+    public void ResetAllFood()
+    {
+        int count = transform.childCount;
+
+        for (int i = 0; i < count; i++)
+        {
+            Destroy(transform.GetChild(i).gameObject);
+        }
+
+        intitializeFruit();
+    }
+
     private Vector3 GetRandomPos()
     {
-        //Bounds Bounds = GameManager.managerInstance.GetBounds();
         Vector3 pos;
         pos.x = Mathf.Round( Random.Range(Bounds.minX, Bounds.maxX));
         pos.y = Mathf.Round( Random.Range(Bounds.minY, Bounds.maxY));

@@ -8,6 +8,9 @@ TagManager:
   - Boundary
   - Body
   - Poison
+  - Shield
+  - ScoreUp
+  - SpeedUp
   layers:
   - Default
   - TransparentFX
