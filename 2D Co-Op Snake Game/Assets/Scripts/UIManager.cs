@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 using System;
@@ -8,7 +9,7 @@ using System;
 public class UIManager : MonoBehaviour
 {
     private static UIManager s_UiInstance;
-    public static UIManager uiInstance { get { return s_UiInstance; } }
+    public static UIManager UiInstance { get { return s_UiInstance; } }
 
 
     [Header("Player")]
@@ -18,12 +19,17 @@ public class UIManager : MonoBehaviour
     public TMP_Text[] player1Score;
     //public Text player2Score;
 
+    [Space]
+    public GameObject GameOverPanel;
+    public TMP_Text gameOverText;
+
     private Color on = new Color(1f,1f,1f,1f);
     private Color off = new Color(1f,1f,1f,0.5f);
 
     void Awake()
     {
         s_UiInstance = this;
+        GameOverPanel.SetActive(false);
         InstantiatePlayerUI();
     }
 
@@ -60,4 +66,24 @@ public class UIManager : MonoBehaviour
             speed[i].color = off;
         }
     }
+
+    public void GameOver(Players player)
+	{
+        GameOverPanel.SetActive(true);
+        if(player == Players.Alpha)
+		{
+            GameOverPanel.GetComponent<Image>().color = new Color(1f, 0f, 0f, 0.3f);
+            gameOverText.text = "Player 2 Wins";
+		}
+		else
+		{
+            GameOverPanel.GetComponent<Image>().color = new Color(0f, 1f, 0f, 0.3f);
+            gameOverText.text = "Player 1 Wins";
+        }
+	}
+
+    public void RestartGame()
+	{
+        SceneManager.LoadScene(0);
+	}
 }

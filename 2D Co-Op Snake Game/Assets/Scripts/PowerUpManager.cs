@@ -40,6 +40,9 @@ public class PowerUpManager : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.ManagerInstance.isGameOver)
+            return;
+
         if(m_Timer> SpawnInterval)
             SpawnRandomPowerUp();
         m_Timer += Time.deltaTime;
@@ -51,7 +54,8 @@ public class PowerUpManager : MonoBehaviour
         GameObject newPower = (index == 0)?shield:(index == 2)?scoreUp:speedUp;
 
         newPower = Instantiate<GameObject>(newPower);
-        newPower.transform.position = GetRandomPos(); 
+        newPower.transform.position = GetRandomPos();
+        newPower.transform.parent = transform;
         Destroy(newPower,aliveTime);
         m_Timer = 0;
     }
@@ -73,5 +77,13 @@ public class PowerUpManager : MonoBehaviour
             return scorePeriod;
         else
             return speedPeriod;
-    }   
+    }  
+    
+    public void GameOver()
+	{
+		for (int i = 0; i < transform.childCount; i++)
+		{
+            Destroy(transform.GetChild(i).gameObject);
+		}
+	}
 }

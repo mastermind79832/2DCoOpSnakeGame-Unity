@@ -50,12 +50,13 @@ public class SnakeController : MonoBehaviour
 
     private void InitializeBody()
     {
-        if(player == Players.Beta)
+        m_Direction = Vector3.right;
+        if (player == Players.Beta)
         {
             GetComponent<SpriteRenderer>().color = Color.red;
+            m_Direction = Vector3.left;
         }
         transform.position = transform.parent.position;
-        m_Direction = Vector3.right;
         m_body = new List<Transform>();
         StartCoroutine(SetImmunity(0.5f));
         m_body.Add(this.transform);
@@ -74,7 +75,7 @@ public class SnakeController : MonoBehaviour
 
     private void Update() 
     { 
-        if(m_Paused)
+        if(m_Paused || GameManager.ManagerInstance.isGameOver)
             return;    
         GetSnakeDirection();
         MoveSnake();  
@@ -95,7 +96,7 @@ public class SnakeController : MonoBehaviour
             if(m_PowerUpTimer[i] > timePeriod)
             {
                 m_PowerUp[i] = false;
-                UIManager.uiInstance.PowerUp(player,(PowerUps)i,false);
+                UIManager.UiInstance.PowerUp(player,(PowerUps)i,false);
                 m_PowerUpTimer[i] = 0;
             }
         }
@@ -193,13 +194,6 @@ public class SnakeController : MonoBehaviour
             decrement -= 0.1f;
         }
     }
-
-    private void PlayAgain()
-    {
-        FruitSpwanner.fruitInstance.ResetAllFood();
-        StartCoroutine(DeathAnimation());
-    }
-
     IEnumerator DeathAnimation()
     {
         m_Paused = true;
@@ -211,8 +205,8 @@ public class SnakeController : MonoBehaviour
         }
         yield return new WaitForSeconds(waitTime);
         m_body.Clear();
-        InitializeBody();
-        m_Paused = false;
+        UIManager.UiInstance.GameOver(player);
+        Destroy(this.gameObject);
     }
     
     private void DestoryLastBody()
@@ -225,33 +219,33 @@ public class SnakeController : MonoBehaviour
     private void UpdateScore(float fruitScore)
     { 
         m_score += fruitScore * ((m_PowerUp[(int)PowerUps.scoreUp])?2:1);
-        UIManager.uiInstance.SetScoreUI(player,m_score);
+        UIManager.UiInstance.SetScoreUI(player,m_score);
     }
 
     private void AteFruit()
     {
-        int count = FruitSpwanner.fruitInstance.SnakeAteFruit();
+        int count = FruitSpwanner.FruitInstance.SnakeAteFruit();
         for (int i = 0; i < count; i++)
         {
             AddNewBodyPart();
         }
         if (m_body.Count > 3)
-            FruitSpwanner.fruitInstance.PoisonActivation(true);
+            FruitSpwanner.FruitInstance.PoisonActivation(true);
         
-        UpdateScore(FruitSpwanner.fruitInstance.fruitScore);
+        UpdateScore(FruitSpwanner.FruitInstance.fruitScore);
     }
 
     private void AtePoison()
     {
-        int count = FruitSpwanner.fruitInstance.SnakeAtePoison();
+        int count = FruitSpwanner.FruitInstance.SnakeAtePoison();
         for (int i = 0; i < count; i++)
         {
             DestoryLastBody();
         }
         if (m_body.Count < 3)
-            FruitSpwanner.fruitInstance.PoisonActivation(false);
+            FruitSpwanner.FruitInstance.PoisonActivation(false);
 
-        UpdateScore(-FruitSpwanner.fruitInstance.poisonScore);
+        UpdateScore(-FruitSpwanner.FruitInstance.poisonScore);
     }
 
      private void AteBody()
@@ -262,19 +256,19 @@ public class SnakeController : MonoBehaviour
         if (m_PowerUp[(int)PowerUps.shield])
         {
             m_PowerUp[(int)PowerUps.shield] = false;
-            UIManager.uiInstance.PowerUp(player, PowerUps.shield, false);
+            UIManager.UiInstance.PowerUp(player, PowerUps.shield, false);
             StartCoroutine(SetImmunity(1));
             return;
         }
         Debug.Log("Player Dead");
-        PlayAgain();
-        FruitSpwanner.fruitInstance.PoisonActivation(false);
+        StartCoroutine(DeathAnimation());
+        GameManager.ManagerInstance.GameOver();
     }
     
     public void ActivatePowerUp(PowerUps power,GameObject powerObject)
     {
         Destroy(powerObject);
-        UIManager.uiInstance.PowerUp(player,power, true);
+        UIManager.UiInstance.PowerUp(player,power, true);
         m_PowerUp[(int)power] = true;
     }
 

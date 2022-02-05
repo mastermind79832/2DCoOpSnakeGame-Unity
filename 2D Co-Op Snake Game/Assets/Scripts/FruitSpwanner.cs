@@ -5,7 +5,7 @@ using UnityEngine;
 public class FruitSpwanner : MonoBehaviour
 {
     private static FruitSpwanner s_FruitInstance;
-    public static FruitSpwanner fruitInstance {get {return s_FruitInstance;}}
+    public static FruitSpwanner FruitInstance {get {return s_FruitInstance;}}
     
     [Header("Fruit")]
     public Transform fruit;
@@ -20,17 +20,16 @@ public class FruitSpwanner : MonoBehaviour
     public float poisonStayTime;
     public float poisonScore;
 
-    [Header("Spawn Properties")]
     private float[] m_SpawnTimer = new float[2];
     private bool m_PosionEnable = false;
 
     void Awake()
     {
         s_FruitInstance = this; 
-        intitializeFruit();
+        IntitializeFruit();
     }
 
-    private void intitializeFruit()
+    private void IntitializeFruit()
     {
         fruit = Instantiate(fruit.gameObject).transform;
         fruit.GetComponent<BoxCollider2D>().enabled = true;
@@ -39,6 +38,9 @@ public class FruitSpwanner : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.ManagerInstance.isGameOver)
+            return;
+
         Spawn();
     }
 
@@ -50,7 +52,7 @@ public class FruitSpwanner : MonoBehaviour
         }
         m_SpawnTimer[0] += Time.deltaTime;
 
-        if(!m_PosionEnable)
+        if (!m_PosionEnable)
             return;
         
         if (m_SpawnTimer[1] > poisonSpawnInterval)
@@ -94,17 +96,17 @@ public class FruitSpwanner : MonoBehaviour
         m_PosionEnable = value;
     }
 
-    public void ResetAllFood()
-    {
-        int count = transform.childCount;
+    //public void ResetAllFood()
+    //{
+    //    int count = transform.childCount;
 
-        for (int i = 0; i < count; i++)
-        {
-            Destroy(transform.GetChild(i).gameObject);
-        }
+    //    for (int i = 0; i < count; i++)
+    //    {
+    //        Destroy(transform.GetChild(i).gameObject);
+    //    }
 
-        intitializeFruit();
-    }
+    //    intitializeFruit();
+    //}
 
     private Vector3 GetRandomPos()
     {
@@ -113,5 +115,13 @@ public class FruitSpwanner : MonoBehaviour
         pos.y = Mathf.Round( Random.Range(Bounds.minY, Bounds.maxY));
         pos.z = 0;
         return pos;
+    }
+
+    public void GameOver()
+	{
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Destroy(transform.GetChild(i).gameObject);
+        }
     }
 }
