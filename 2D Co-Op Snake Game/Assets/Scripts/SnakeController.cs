@@ -264,7 +264,13 @@ public class SnakeController : MonoBehaviour
         StartCoroutine(DeathAnimation());
         GameManager.ManagerInstance.GameOver();
     }
-    
+
+    private void AteHead()
+    {
+        GameManager.ManagerInstance.Draw();
+        UIManager.UiInstance.Draw();
+    }
+
     public void ActivatePowerUp(PowerUps power,GameObject powerObject)
     {
         Destroy(powerObject);
@@ -287,6 +293,12 @@ public class SnakeController : MonoBehaviour
             return;
         }
 
+        if (other.CompareTag("Head"))
+        {
+            AteHead();
+            return;
+        }
+
         if (other.CompareTag("Body"))
         {
             AteBody();
@@ -305,5 +317,5 @@ public class SnakeController : MonoBehaviour
         {
             ActivatePowerUp(PowerUps.speedUp,other.gameObject);
         }
-    } 
+    }
 }

@@ -10,5 +10,5 @@ public static class Bounds
 public enum Players
 {
     Alpha = 0 ,
-    Beta = 1
+    Beta = 1,
 }

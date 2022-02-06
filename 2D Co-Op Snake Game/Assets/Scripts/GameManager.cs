@@ -47,4 +47,9 @@ public class GameManager : MonoBehaviour
         FruitSpwanner.FruitInstance.GameOver();
         PowerUpManager.powerUpInstance.GameOver();
 	}
+
+    public void Draw()
+	{
+        isGameOver = true;
+	}
 }

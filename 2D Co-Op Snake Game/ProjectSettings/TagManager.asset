@@ -11,6 +11,7 @@ TagManager:
   - Shield
   - ScoreUp
   - SpeedUp
+  - Head
   layers:
   - Default
   - TransparentFX

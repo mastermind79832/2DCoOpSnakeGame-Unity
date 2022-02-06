@@ -82,6 +82,13 @@ public class UIManager : MonoBehaviour
         }
 	}
 
+    public void Draw()
+	{
+        GameOverPanel.SetActive(true);
+        GameOverPanel.GetComponent<Image>().color = new Color(0f, 0f, 1f, 0.3f);
+        gameOverText.text = "DRAW";
+    }
+
     public void RestartGame()
 	{
         SceneManager.LoadScene(1);
