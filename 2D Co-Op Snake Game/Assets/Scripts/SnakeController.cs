@@ -23,6 +23,7 @@ public class SnakeController : MonoBehaviour
 
     private Vector3 m_Direction;
     private Rigidbody2D m_rigidBody;
+    private AudioContoller audio;
     private List<Transform> m_body;
     private float m_MoveTimer = 0;
     private bool m_IsVertical, m_Paused, m_immunity;
@@ -33,6 +34,7 @@ public class SnakeController : MonoBehaviour
     private void Start()
     {
         m_rigidBody = GetComponent<Rigidbody2D>();
+        audio = GetComponent<AudioContoller>();
         m_rigidBody.bodyType = RigidbodyType2D.Kinematic;
         m_Paused = false;
         InitializeBody();
@@ -218,12 +220,13 @@ public class SnakeController : MonoBehaviour
     
     private void UpdateScore(float fruitScore)
     { 
-        m_score += fruitScore * ((m_PowerUp[(int)PowerUps.scoreUp])?2:1);
+        m_score += fruitScore;
         UIManager.UiInstance.SetScoreUI(player,m_score);
     }
 
     private void AteFruit()
     {
+        audio.Play(Sounds.Eat);
         int count = FruitSpwanner.FruitInstance.SnakeAteFruit();
         for (int i = 0; i < count; i++)
         {
@@ -232,11 +235,12 @@ public class SnakeController : MonoBehaviour
         if (m_body.Count > 3)
             FruitSpwanner.FruitInstance.PoisonActivation(true);
         
-        UpdateScore(FruitSpwanner.FruitInstance.fruitScore);
+        UpdateScore(FruitSpwanner.FruitInstance.fruitScore * ((m_PowerUp[(int)PowerUps.scoreUp]) ? 2 : 1));
     }
 
     private void AtePoison()
     {
+        audio.Play(Sounds.Poison);
         int count = FruitSpwanner.FruitInstance.SnakeAtePoison();
         for (int i = 0; i < count; i++)
         {
@@ -244,6 +248,12 @@ public class SnakeController : MonoBehaviour
         }
         if (m_body.Count < 3)
             FruitSpwanner.FruitInstance.PoisonActivation(false);
+        if(m_body.Count < 2)
+		{
+            audio.Play(Sounds.Death);
+            StartCoroutine(DeathAnimation());
+            GameManager.ManagerInstance.GameOver();
+		}
 
         UpdateScore(-FruitSpwanner.FruitInstance.poisonScore);
     }
@@ -260,6 +270,7 @@ public class SnakeController : MonoBehaviour
             StartCoroutine(SetImmunity(1));
             return;
         }
+        audio.Play(Sounds.Death);
         Debug.Log("Player Dead");
         StartCoroutine(DeathAnimation());
         GameManager.ManagerInstance.GameOver();
@@ -273,6 +284,7 @@ public class SnakeController : MonoBehaviour
 
     public void ActivatePowerUp(PowerUps power,GameObject powerObject)
     {
+        audio.Play(Sounds.Eat);
         Destroy(powerObject);
         UIManager.UiInstance.PowerUp(player,power, true);
         m_PowerUp[(int)power] = true;
