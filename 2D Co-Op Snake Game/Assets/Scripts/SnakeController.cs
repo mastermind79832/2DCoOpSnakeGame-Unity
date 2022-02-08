@@ -23,7 +23,7 @@ public class SnakeController : MonoBehaviour
 
     private Vector3 m_Direction;
     private Rigidbody2D m_rigidBody;
-    private AudioContoller audio;
+    private AudioContoller m_Audio;
     private List<Transform> m_body;
     private float m_MoveTimer = 0;
     private bool m_IsVertical, m_Paused, m_immunity;
@@ -34,7 +34,7 @@ public class SnakeController : MonoBehaviour
     private void Start()
     {
         m_rigidBody = GetComponent<Rigidbody2D>();
-        audio = GetComponent<AudioContoller>();
+        m_Audio = GetComponent<AudioContoller>();
         m_rigidBody.bodyType = RigidbodyType2D.Kinematic;
         m_Paused = false;
         InitializeBody();
@@ -226,8 +226,8 @@ public class SnakeController : MonoBehaviour
 
     private void AteFruit()
     {
-        audio.Play(Sounds.Eat);
-        int count = FruitSpwanner.FruitInstance.SnakeAteFruit();
+        m_Audio.Play(Sounds.Eat);
+        int count = FruitSpwanner.FruitInstance.SnakeAteFruit() * ((m_PowerUp[(int)PowerUps.scoreUp]) ? 2 : 1);
         for (int i = 0; i < count; i++)
         {
             AddNewBodyPart();
@@ -240,20 +240,20 @@ public class SnakeController : MonoBehaviour
 
     private void AtePoison()
     {
-        audio.Play(Sounds.Poison);
+        m_Audio.Play(Sounds.Poison);
         int count = FruitSpwanner.FruitInstance.SnakeAtePoison();
+        if (m_body.Count < count + 1)
+        {
+            m_Audio.Play(Sounds.Death);
+            StartCoroutine(DeathAnimation());
+            GameManager.ManagerInstance.GameOver();
+        }
         for (int i = 0; i < count; i++)
         {
             DestoryLastBody();
         }
         if (m_body.Count < 3)
             FruitSpwanner.FruitInstance.PoisonActivation(false);
-        if(m_body.Count < 2)
-		{
-            audio.Play(Sounds.Death);
-            StartCoroutine(DeathAnimation());
-            GameManager.ManagerInstance.GameOver();
-		}
 
         UpdateScore(-FruitSpwanner.FruitInstance.poisonScore);
     }
@@ -270,7 +270,7 @@ public class SnakeController : MonoBehaviour
             StartCoroutine(SetImmunity(1));
             return;
         }
-        audio.Play(Sounds.Death);
+        m_Audio.Play(Sounds.Death);
         Debug.Log("Player Dead");
         StartCoroutine(DeathAnimation());
         GameManager.ManagerInstance.GameOver();
@@ -284,7 +284,7 @@ public class SnakeController : MonoBehaviour
 
     public void ActivatePowerUp(PowerUps power,GameObject powerObject)
     {
-        audio.Play(Sounds.Eat);
+        m_Audio.Play(Sounds.Eat);
         Destroy(powerObject);
         UIManager.UiInstance.PowerUp(player,power, true);
         m_PowerUp[(int)power] = true;
