@@ -131,6 +131,7 @@ public class SnakeController : MonoBehaviour
         {
             MoveBody();
             MoveHead();
+            m_MoveTimer = 0;
         }
         m_MoveTimer += Time.deltaTime;
     }
@@ -149,8 +150,7 @@ public class SnakeController : MonoBehaviour
         Vector3 pos = transform.position;
         pos += m_Direction;
         CheckBoundary(ref pos);
-        transform.position = pos;
-        m_MoveTimer = 0;
+        transform.position = pos;     
 
         if(m_Direction.x == 0)
             m_IsVertical = true;
